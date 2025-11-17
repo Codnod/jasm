@@ -178,26 +178,87 @@ kubectl apply -f config/manager/
 
 ## GitHub Actions CI/CD
 
-The project uses GitHub Actions for automated testing and publishing:
+The project uses GitHub Actions for automated testing, validation, and releasing:
 
-- **Tests**: Run on every PR and push
-- **Docker Build**: Multi-arch builds on main and tags
-- **Publishing**: Automatic push to ghcr.io on merge to main
+### CI Workflow (`.github/workflows/ci.yml`)
 
-Images are published to: `ghcr.io/codnod/jasm`
+Runs on every pull request and push to main:
+
+- **Tests**: `go test -v -race -coverprofile=coverage.out ./...`
+- **Linting**: golangci-lint checks code quality
+- **Build Verification**: Ensures binary compiles successfully
+- **Docker Build Test**: Validates Dockerfile without pushing
+
+All checks must pass before merging to main.
+
+### Release Workflow (`.github/workflows/release.yml`)
+
+Runs on every push to main:
+
+- **Semantic Release**: Automatically determines next version based on commits
+- **Changelog Generation**: Creates CHANGELOG.md automatically
+- **Git Tag**: Creates version tag (e.g., v1.2.0)
+- **GitHub Release**: Publishes release with changelog
+- **Docker Build & Push**: Multi-arch images to ghcr.io on successful release
+
+No manual intervention needed!
+
+## Commit Message Format
+
+JASM uses [Conventional Commits](https://www.conventionalcommits.org/) for automatic versioning.
+
+See [CONVENTIONAL_COMMITS.md](.github/CONVENTIONAL_COMMITS.md) for detailed guidelines.
+
+**Quick reference:**
+
+- `feat:` - New feature (triggers minor version bump)
+- `fix:` - Bug fix (triggers patch version bump)
+- `feat!:` - Breaking change (triggers major version bump)
+- `docs:`, `test:`, `ci:`, `chore:` - No release
+
+Example:
+
+```bash
+git commit -m "feat(controller): add secret key mapping support
+
+This allows pods to rename AWS secret keys when creating Kubernetes secrets.
+
+Closes #123"
+```
 
 ## Release Process
 
-Releases are created by maintainers:
+**Releases are automated!** No manual steps needed.
 
-1. Update version in relevant files
-2. Update CHANGELOG.md
-3. Create and push a git tag:
-   ```bash
-   git tag -a v1.0.0 -m "Release v1.0.0"
-   git push origin v1.0.0
-   ```
-4. GitHub Actions will automatically build and publish the release
+1. Make changes in feature branch
+2. Create pull request
+3. CI workflow runs tests and checks
+4. On approval, merge to main
+5. Release workflow automatically:
+   - Analyzes commits since last release
+   - Determines next version (major.minor.patch)
+   - Creates CHANGELOG.md entries
+   - Creates git tag
+   - Publishes GitHub Release
+   - Builds and pushes Docker images to ghcr.io
+
+The next version is determined from commits:
+- All `fix:` commits → patch version
+- Any `feat:` commits → minor version
+- Any `feat!:` or breaking changes → major version
+
+Example flow:
+```
+main branch has commits:
+- fix: resolve race condition
+- feat: add key mapping support
+
+Result: Version bumped to v1.2.0
+Changelog auto-generated from commits
+Docker image pushed as ghcr.io/codnod/jasm:v1.2.0 and :latest
+```
+
+Images are published to: `ghcr.io/codnod/jasm`
 
 ## Getting Help
 
