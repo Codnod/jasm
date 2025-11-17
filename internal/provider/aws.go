@@ -50,9 +50,28 @@ func (p *AWSSecretsManagerProvider) FetchSecret(ctx context.Context, path string
 	}
 
 	// Parse JSON secret
-	var secretData map[string]string
-	if err := json.Unmarshal([]byte(*result.SecretString), &secretData); err != nil {
+	var rawData map[string]interface{}
+	if err := json.Unmarshal([]byte(*result.SecretString), &rawData); err != nil {
 		return nil, fmt.Errorf("failed to parse secret JSON: %w", err)
+	}
+
+	// Convert all values to strings
+	secretData := make(map[string]string, len(rawData))
+	for key, value := range rawData {
+		switch v := value.(type) {
+		case string:
+			secretData[key] = v
+		case float64:
+			secretData[key] = fmt.Sprintf("%v", v)
+		case bool:
+			secretData[key] = fmt.Sprintf("%v", v)
+		case nil:
+			secretData[key] = ""
+		default:
+			// For complex types (objects, arrays), convert to JSON
+			jsonBytes, _ := json.Marshal(v)
+			secretData[key] = string(jsonBytes)
+		}
 	}
 
 	return secretData, nil
