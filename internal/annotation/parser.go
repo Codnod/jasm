@@ -16,10 +16,10 @@ const (
 
 // PodAnnotation represents the parsed annotation structure.
 type PodAnnotation struct {
-	Provider  string            `yaml:"provider"`
-	Path      string            `yaml:"path"`
-	SecretName string           `yaml:"secretName"`
-	Keys      map[string]string `yaml:"keys"`
+	Provider   string            `yaml:"provider"`
+	Path       string            `yaml:"path"`
+	SecretName string            `yaml:"secretName"`
+	Keys       map[string]string `yaml:"keys"`
 }
 
 // SecretSyncRequest represents a complete secret synchronization request.

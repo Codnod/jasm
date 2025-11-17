@@ -74,10 +74,10 @@ keys:
 
 func TestParseAnnotationValidation(t *testing.T) {
 	tests := []struct {
-		name      string
+		name       string
 		annotation string
-		wantErr   bool
-		errMsg    string
+		wantErr    bool
+		errMsg     string
 	}{
 		{
 			name:       "Empty annotation",
