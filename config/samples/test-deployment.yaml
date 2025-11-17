@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-app
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-app
+  template:
+    metadata:
+      labels:
+        app: test-app
+      annotations:
+        jasm.codnod.io/secret-sync: |
+          provider: aws-secretsmanager
+          path: /prod/codnod/config
+          secretName: app-credentials
+    spec:
+      serviceAccountName: default
+      containers:
+      - name: app
+        image: busybox:latest
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for secret to be created..."
+          sleep 10
+          if [ -f /etc/secrets/DB_HOST ]; then
+            echo "Secret mounted successfully!"
+            echo "DB_HOST: $(cat /etc/secrets/DB_HOST)"
+            echo "DB_USERNAME: $(cat /etc/secrets/DB_USERNAME)"
+            echo "DB_PASSWORD: [REDACTED]"
+          else
+            echo "Secret not found!"
+            exit 1
+          fi
+          # Keep pod running for testing
+          tail -f /dev/null
+        volumeMounts:
+        - name: secrets
+          mountPath: /etc/secrets
+          readOnly: true
+      volumes:
+      - name: secrets
+        secret:
+          secretName: app-credentials
+          optional: true

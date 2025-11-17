@@ -1,0 +1,46 @@
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+LICENSE
+docs/
+
+# IDE and editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build artifacts
+bin/
+dist/
+build/
+
+# Go specific
+vendor/
+*.test
+coverage.out
+
+# Logs and temporary files
+*.log
+.tmp/
+logs/
+
+# Environment files
+.env
+.env.*
+
+# Tests
+tests/
+*_test.go
+
+# Kubernetes and deployment configs (build context should be minimal)
+config/
+specs/
+.specify/
+
+# Mac and Windows
+.DS_Store
+Thumbs.db

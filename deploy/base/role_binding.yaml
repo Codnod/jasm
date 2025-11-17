@@ -1,0 +1,12 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: jasm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: jasm
+subjects:
+- kind: ServiceAccount
+  name: jasm
+  # namespace will be set by kustomize based on the overlay

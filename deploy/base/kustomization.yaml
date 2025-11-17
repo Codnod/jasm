@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: jasm
+
+resources:
+  - namespace.yaml
+  - service_account.yaml
+  - role.yaml
+  - role_binding.yaml
+  - deployment.yaml
+
+commonLabels:
+  app.kubernetes.io/name: jasm
+  app.kubernetes.io/managed-by: kustomize
+
+images:
+  - name: ghcr.io/codnod/jasm
+    newTag: latest
