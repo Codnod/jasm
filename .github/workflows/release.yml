@@ -82,6 +82,7 @@ jobs:
           VERSION=$(git describe --tags --abbrev=0)
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "image_name=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -90,8 +91,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:${{ steps.version.outputs.version }}
-            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ steps.version.outputs.image_name }}:${{ steps.version.outputs.version }}
+            ghcr.io/${{ steps.version.outputs.image_name }}:latest
           labels: |
             org.opencontainers.image.title=JASM
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
