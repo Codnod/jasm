@@ -12,7 +12,7 @@ spec:
         - --leader-elect=true
         - --metrics-bind-address=:8080
         - --health-probe-bind-address=:8081
-        - --zap-log-level=warn
+        - --zap-log-level=error
         - --zap-devel=false
         - --zap-encoder=json
         - --zap-stacktrace-level=error
