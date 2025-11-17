@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jasm
+  namespace: default
+  labels:
+    app: jasm
+    app.kubernetes.io/name: jasm
+    app.kubernetes.io/component: controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jasm
+  template:
+    metadata:
+      labels:
+        app: jasm
+        app.kubernetes.io/name: jasm
+        app.kubernetes.io/component: controller
+    spec:
+      serviceAccountName: jasm
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        fsGroup: 65532
+      containers:
+      - name: controller
+        image: ghcr.io/codnod/jasm:latest
+        imagePullPolicy: IfNotPresent
+        command:
+        - /controller
+        args:
+        - --leader-elect
+        - --metrics-bind-address=:8080
+        - --health-probe-bind-address=:8081
+        ports:
+        - name: metrics
+          containerPort: 8080
+          protocol: TCP
+        - name: health
+          containerPort: 8081
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: health
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: health
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          limits:
+            cpu: 200m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 64Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        env:
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: AWS_ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: AWS_SECRET_ACCESS_KEY
+        - name: AWS_REGION
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: AWS_REGION
+        # For IRSA in production:
+        # - name: AWS_ROLE_ARN
+        #   value: "arn:aws:iam::ACCOUNT:role/jasm-role"
+        # - name: AWS_WEB_IDENTITY_TOKEN_FILE
+        #   value: "/var/run/secrets/eks.amazonaws.com/serviceaccount/token"

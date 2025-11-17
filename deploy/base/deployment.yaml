@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jasm
+  labels:
+    app: jasm
+    app.kubernetes.io/name: jasm
+    app.kubernetes.io/component: controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jasm
+  template:
+    metadata:
+      labels:
+        app: jasm
+        app.kubernetes.io/name: jasm
+        app.kubernetes.io/component: controller
+    spec:
+      serviceAccountName: jasm
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        fsGroup: 65532
+      containers:
+      - name: controller
+        image: ghcr.io/codnod/jasm:latest
+        imagePullPolicy: IfNotPresent
+        command:
+        - /controller
+        args:
+        - --leader-elect=false
+        - --metrics-bind-address=:8080
+        - --health-probe-bind-address=:8081
+        # Logging configuration (defaults shown):
+        # - --zap-log-level=info          # debug, info, error, panic
+        # - --zap-devel=true               # Development mode (console output)
+        # - --zap-encoder=console          # console or json
+        # - --zap-stacktrace-level=error   # When to include stacktraces
+        ports:
+        - name: metrics
+          containerPort: 8080
+          protocol: TCP
+        - name: health
+          containerPort: 8081
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: health
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: health
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          limits:
+            cpu: 200m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 64Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        # AWS authentication can be configured via:
+        # 1. IRSA (recommended for EKS) - service account annotation
+        # 2. Instance IAM role (recommended for self-hosted) - automatic
+        # 3. Static credentials (dev only) - uncomment env vars below
+        # env:
+        # - name: AWS_REGION
+        #   value: "us-east-1"

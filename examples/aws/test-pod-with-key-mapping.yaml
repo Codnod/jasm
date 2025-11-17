@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod-key-mapping
+  annotations:
+    jasm.codnod.io/secret-sync: |
+      provider: aws-secretsmanager
+      path: test-secret
+      secretName: test-secret-mapped
+      keys:
+        database: DB_HOST
+        password: DB_PASSWORD
+        username: DB_USER
+spec:
+  serviceAccountName: default
+  containers:
+  - name: test-app
+    image: curlimages/curl:latest
+    command: ["/bin/sh"]
+    args: ["-c", "env | grep DB_ && sleep 3600"]
+    env:
+    - name: DB_HOST
+      valueFrom:
+        secretKeyRef:
+          name: test-secret-mapped
+          key: database
+    - name: DB_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: test-secret-mapped
+          key: password
+    - name: DB_USER
+      valueFrom:
+        secretKeyRef:
+          name: test-secret-mapped
+          key: username
